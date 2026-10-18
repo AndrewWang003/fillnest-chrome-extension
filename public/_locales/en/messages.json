@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "FillNest",
+    "description": "The extension's name, shown in Chrome and in the Web Store."
+  },
+  "extensionDescription": {
+    "message": "Field-aware plain-text templates with explicit user control.",
+    "description": "The extension's one-line description, shown in Chrome and in the Web Store."
+  }
+}

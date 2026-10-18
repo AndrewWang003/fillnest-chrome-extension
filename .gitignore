@@ -1,0 +1,14 @@
+dist/
+node_modules/
+playwright-report/
+test-results/
+output/playwright/
+output/*.zip
+*.tsbuildinfo
+.DS_Store
+.worktrees/
+.verify-bundle.tar.gz
+.claude/
+dist-e2e/
+output/store-screenshots/
+output/promo/

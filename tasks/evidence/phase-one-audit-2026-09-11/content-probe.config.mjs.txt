@@ -1,0 +1,6 @@
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  define: { __FILLNEST_PICKER_SHADOW_MODE__: JSON.stringify("open") },
+  test: { include: ["tasks/evidence/phase-one-audit-2026-09-11/content-probe.test.ts"] },
+});

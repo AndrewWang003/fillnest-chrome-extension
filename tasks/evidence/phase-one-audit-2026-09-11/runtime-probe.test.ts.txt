@@ -1,0 +1,112 @@
+import { afterEach, expect, it, vi } from 'vitest';
+import { createInitialActivationState } from '../../../src/activation/activation-repository';
+import { createInitialFillNestState } from '../../../src/storage/fillnest-repository';
+
+// Audit evidence: assertions describe the observed defects, not desired behavior.
+// Run: npx vitest run --config tasks/evidence/phase-one-audit-2026-09-11/runtime-probe.config.mjs
+async function worker() {
+  vi.resetModules();
+  const data: Record<string, any> = {
+    fillnestState: createInitialFillNestState(),
+    fillnestActivation: createInitialActivationState(),
+  };
+  let fault: ((items: Record<string, unknown>) => void) | undefined;
+  let listener: any;
+  const notifications: any[] = [];
+  vi.stubGlobal('chrome', {
+    storage: { local: {
+      get: async (key: string) => structuredClone({ [key]: data[key] }),
+      set: async (items: Record<string, unknown>) => { fault?.(items); Object.assign(data, structuredClone(items)); },
+      remove: async (key: string) => { delete data[key]; },
+    } },
+    runtime: {
+      id: 'audit', getURL: (path: string) => `chrome-extension://audit/${path}`,
+      getManifest: () => ({ version: '0.1.1' }),
+      onInstalled: { addListener: vi.fn() },
+      onMessage: { addListener: (next: any) => { listener = next; } },
+      sendMessage: async (message: any) => { notifications.push(message); },
+    },
+    permissions: {
+      getAll: async () => ({ origins: [] }),
+      onRemoved: { addListener: vi.fn() },
+    },
+    scripting: { getRegisteredContentScripts: async () => [] },
+    tabs: { query: async () => [], sendMessage: async () => undefined },
+  });
+  await import('../../../src/background/service-worker');
+  const send = (message: any): Promise<any> => new Promise((resolve) => {
+    listener(message, { id: 'audit', url: 'chrome-extension://audit/side-panel.html' }, resolve);
+  });
+  expect((await send({ type: 'READ_STATE' })).ok).toBe(true);
+  return { data, send, notifications, setFault: (next: typeof fault) => { fault = next; } };
+}
+
+afterEach(() => vi.unstubAllGlobals());
+
+it('allows new writes and overwrites recovery evidence after a failed Restore rollback in the same worker', async () => {
+  const w = await worker();
+  const backup = await w.send({ type: 'CREATE_BACKUP_ARCHIVE' });
+  const archiveJson = backup.value.archiveJson;
+  await w.send({ type: 'CREATE_TEMPLATE', content: 'Original user data', pageUrl: 'https://example.com/' });
+  const preview = await w.send({ type: 'VALIDATE_BACKUP_ARCHIVE', archiveJson });
+  let activationWrites = 0;
+  let businessWrites = 0;
+  w.setFault((items) => {
+    if ('fillnestState' in items && ++businessWrites === 2) throw new Error('Injected rollback failure');
+    if ('fillnestActivation' in items && ++activationWrites === 1) throw new Error('Injected activation failure');
+  });
+  expect((await w.send({ type: 'RESTORE_BACKUP_ARCHIVE', archiveJson, typedConfirmation: 'restore', expectedConfirmationToken: preview.value.confirmationToken })).ok).toBe(false);
+  expect(w.data._fillnest_restore_journal.status).toBe('failed');
+  expect(w.data._fillnest_restore_journal.priorState.business.templates[0].content).toBe('Original user data');
+  expect(w.data.fillnestState.templates).toHaveLength(0);
+  w.setFault(undefined);
+  // This should be blocked while failed recovery evidence exists.
+  expect((await w.send({ type: 'CREATE_TEMPLATE', content: 'After failure', pageUrl: 'https://example.com/' })).ok).toBe(true);
+  const retryPreview = await w.send({ type: 'VALIDATE_BACKUP_ARCHIVE', archiveJson });
+  expect((await w.send({ type: 'RESTORE_BACKUP_ARCHIVE', archiveJson, typedConfirmation: 'restore', expectedConfirmationToken: retryPreview.value.confirmationToken })).ok).toBe(true);
+  // A second Restore discarded the original prior state, despite its failed journal.
+  expect(w.data._fillnest_restore_journal).toBeUndefined();
+  expect(w.data.fillnestState.templates).toHaveLength(0);
+});
+
+it('clears the stored language on Reset without notifying mounted language consumers', async () => {
+  const w = await worker();
+  expect((await w.send({ type: 'SET_LANGUAGE', language: 'zh-Hans' })).ok).toBe(true);
+  w.notifications.length = 0;
+  const preview = await w.send({ type: 'GET_RESET_PREVIEW' });
+  expect((await w.send({ type: 'RESET_FILLNEST', typedConfirmation: 'reset', expectedConfirmationToken: preview.value.confirmationToken })).ok).toBe(true);
+  expect((await w.send({ type: 'GET_LANGUAGE' })).value).toBe('system');
+  expect(w.notifications.some((message) => message.type === 'LANGUAGE_CHANGED')).toBe(false);
+  expect(w.notifications.some((message) => message.type === 'APPEARANCE_CHANGED')).toBe(true);
+});
+
+it('returns English user-facing validation errors even with Chinese selected', async () => {
+  const w = await worker();
+  await w.send({ type: 'SET_LANGUAGE', language: 'zh-Hans' });
+  const response = await w.send({ type: 'VALIDATE_BACKUP_ARCHIVE', archiveJson: '{broken' });
+  expect(response).toEqual({ ok: false, error: 'File content is not valid JSON.' });
+  // SettingsPage feeds this raw response.error directly into setRestoreError.
+});
+
+it('drops private audience and field metadata in a real worker backup roundtrip', async () => {
+  const w = await worker();
+  const created = await w.send({
+    type: 'CREATE_TEMPLATE_AND_BIND', content: 'Private field text',
+    pageUrl: 'https://example.com/form', pageProfileId: 'p-a', fieldProfileId: 'f-a',
+    fieldObservedTitle: 'Special instructions', privateToField: true,
+  });
+  expect(created.ok).toBe(true);
+  expect((await w.send({ type: 'RECORD_INSERTION_REJECTION', fieldProfileId: 'f-a', rejected: true })).ok).toBe(true);
+  const backup = await w.send({ type: 'CREATE_BACKUP_ARCHIVE' });
+  const archiveJson = backup.value.archiveJson;
+  const exported = JSON.parse(archiveJson).payload.business;
+  expect(exported.bindings[0].privateToField).toBe(true);
+  expect(exported.fieldProfiles[0].observedTitle).toBe('Special instructions');
+  expect(exported.fieldProfiles[0].insertionRejected).toBe(true);
+  const preview = await w.send({ type: 'VALIDATE_BACKUP_ARCHIVE', archiveJson });
+  expect((await w.send({ type: 'RESTORE_BACKUP_ARCHIVE', archiveJson, typedConfirmation: 'restore', expectedConfirmationToken: preview.value.confirmationToken })).ok).toBe(true);
+  const state = (await w.send({ type: 'READ_STATE' })).value;
+  expect(state.bindings[0].privateToField).toBeUndefined();
+  expect(state.fieldProfiles[0].observedTitle).toBeUndefined();
+  expect(state.fieldProfiles[0].insertionRejected).toBeUndefined();
+});

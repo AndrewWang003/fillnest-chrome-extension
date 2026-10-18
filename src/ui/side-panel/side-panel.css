@@ -1,0 +1,405 @@
+:root { color: var(--fn-text); background: var(--fn-canvas); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { margin: 0; }
+button, input { font: inherit; }
+.panel-shell { height: 100vh; display: flex; flex-direction: column; }
+/* The standalone FillNest header is removed (Task 011). The app icon now lives
+   inside the navigation bar as a non-interactive visual anchor. */
+.panel-nav-icon { display: flex; align-items: center; justify-content: center; padding: 0 8px; pointer-events: none; user-select: none; }
+/* Task 033 Addendum D: the owner's mark; see popup.css. */
+.panel-logo { display: block; width: 26px; height: 26px; color: var(--fn-text); flex: none; }
+nav { display: grid; grid-template-columns: auto repeat(3, 1fr) 52px; flex: none; z-index: 2; background: var(--fn-surface); border-bottom: 1px solid var(--fn-border); }
+nav button { padding: 11px 4px; border: 0; border-bottom: 2px solid transparent; color: var(--fn-text-muted); background: transparent; font-size: 11px; font-weight: 650; cursor: pointer; }
+nav button.selected { color: var(--fn-accent); border-bottom-color: var(--fn-accent); }
+/* Owner QA 2026-09-15: Settings is its gear alone; Language carries a
+   translate glyph a reader of any language can recognise. */
+nav button .nav-icon { display: block; width: 18px; height: 18px; margin: 0 auto; }
+.language-heading { display: flex; align-items: center; gap: 6px; }
+.language-heading .language-icon { width: 16px; height: 16px; flex: none; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--fn-focus-ring); outline-offset: 2px; }
+/* Global result region (Task 011): sits directly below navigation, hosts the
+   single current Side Panel result including reversible-operation Undo.
+   Empty when there is no result; no height is reserved. */
+.panel-result-region { flex: none; z-index: 5; padding: 0 12px; background: var(--fn-surface); }
+.panel-result-region:has(.side-panel-notification) { padding: 8px 12px 12px; border-top: 1px solid var(--fn-border); box-shadow: 0 -4px 12px rgb(var(--fn-shadow) / 5%); }
+/* Task 045: each scroll container keeps its scrollbar's room (see
+   shared/scrollbars.css); its right padding is the left less 10px. */
+.panel-content { flex: 1; overflow-y: auto; scrollbar-gutter: stable; padding: 20px 6px 28px 16px; }
+
+.side-panel-notification { display: flex; align-items: stretch; gap: 6px; border: 1px solid var(--fn-accent-border); border-radius: 10px; background: var(--fn-accent-soft); overflow: hidden; }
+.side-panel-notification-body { flex: 1; min-width: 0; display: grid; gap: 4px; padding: 10px 12px; border: 0; background: transparent; color: var(--fn-accent-hover); font-size: 12.5px; font-weight: 650; text-align: left; cursor: default; }
+.side-panel-notification-body[aria-expanded] { cursor: pointer; }
+.side-panel-notification-body span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-panel-notification-detail { color: var(--fn-icon); font-size: 11.5px; font-weight: 500; white-space: normal; }
+.side-panel-notification-action-description { color: var(--fn-icon); font-size: 11.5px; font-weight: 500; white-space: normal; }
+.side-panel-notification-action { align-self: center; flex: none; margin-right: 8px; padding: 5px 8px; border: 1px solid currentColor; border-radius: 6px; background: color-mix(in srgb, var(--fn-surface) 76%, transparent); color: var(--fn-accent-hover); font: 700 11px/1.2 inherit; cursor: pointer; }
+.side-panel-notification-action:hover { background: var(--fn-canvas); }
+.side-panel-notification-action.danger { border-color: var(--fn-danger); background: var(--fn-danger-soft); color: var(--fn-danger); }
+.side-panel-notification-action.danger:hover { background: var(--fn-danger-soft); color: var(--fn-danger-hover); }
+.side-panel-notification-dismiss { flex: none; border: 0; background: transparent; padding: 0 12px; color: var(--fn-text-muted); font-size: 16px; cursor: pointer; }
+.side-panel-notification-dismiss:hover { color: var(--fn-accent-hover); }
+h1 { margin: 0 0 14px; font-size: 22px; }
+h2 { margin: 0; font-size: 13px; }
+p, .lead { color: var(--fn-text-muted); font-size: 13px; line-height: 1.5; }
+.primary { border: 0; border-radius: 8px; padding: 9px 12px; color: var(--fn-on-accent); background: var(--fn-accent); font-weight: 650; cursor: pointer; }
+.summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0; }
+.summary div { padding: 14px; border: 1px solid var(--fn-border); border-radius: 10px; background: var(--fn-surface); }
+.summary dt { color: var(--fn-text-muted); font-size: 11px; }
+.summary dd { margin: 3px 0 0; font-size: 22px; font-weight: 750; }
+.search { display: grid; gap: 6px; color: var(--fn-text-muted); font-size: 11px; }
+.search input { box-sizing: border-box; width: 100%; padding: 10px; border: 1px solid var(--fn-border-strong); border-radius: 8px; background: var(--fn-surface); }
+
+.search-chip-box { box-sizing: border-box; width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 7px 8px; border: 1px solid var(--fn-border-strong); border-radius: 8px; background: var(--fn-surface); cursor: text; }
+.search-chip-box input { flex: 1; min-width: 110px; width: auto; padding: 3px 2px; border: 0; border-radius: 0; }
+.search-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 4px 3px 9px; border: 1px solid var(--fn-accent-border); border-radius: 999px; background: var(--fn-accent-soft); color: var(--fn-accent-hover); font-size: 11px; font-weight: 700; }
+.search-chip-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, monospace; font-weight: 600; }
+.search-chip button { flex: none; display: grid; place-items: center; width: 16px; height: 16px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--fn-accent) 12%, transparent); color: var(--fn-accent-hover); cursor: pointer; }
+.search-chip button:hover { background: var(--fn-accent); color: var(--fn-on-accent); }
+.search-chip button svg { width: 9px; height: 9px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
+.search-union-hint { color: var(--fn-text-muted); font-size: 11px; line-height: 1.5; }
+
+.site-filter { position: relative; }
+.site-filter > button { display: inline-flex; align-items: center; gap: 8px; box-sizing: border-box; max-width: 100%; padding: 8px; border: 1px solid var(--fn-border-strong); border-radius: 8px; background: var(--fn-surface); font-size: 12px; color: var(--fn-text-secondary); font-weight: 650; cursor: pointer; }
+.site-filter > button:disabled { color: var(--fn-text-disabled); cursor: default; }
+.site-filter > button[aria-expanded="true"] { border-color: var(--fn-accent); }
+.site-filter-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site-filter > button svg { flex: none; width: 12px; height: 12px; fill: none; stroke: var(--fn-text-muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.site-filter-menu { position: absolute; top: 100%; left: 0; z-index: 6; margin-top: 5px; width: 244px; max-height: 236px; overflow-y: auto; scrollbar-gutter: stable; box-sizing: border-box; padding: 6px 0 6px 6px; border: 1px solid var(--fn-border-strong); border-radius: 10px; background: var(--fn-surface); box-shadow: 0 10px 26px rgb(var(--fn-shadow) / 16%); }
+.site-filter-menu-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 6px 6px; }
+.site-filter-menu-header span:first-child { color: var(--fn-text-muted); font-size: 10.5px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
+.site-filter-menu-header button { border: 0; background: transparent; padding: 0; color: var(--fn-text-muted); font-size: 11px; font-weight: 650; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.site-filter-menu-header button:hover { color: var(--fn-accent-hover); }
+/* `.library-filters label` (below) sets display:grid at higher specificity
+   (one more element in the selector) than a bare `.site-filter-option`
+   class would, which stacked the checkbox/id/count into separate grid rows
+   instead of one line - scope the selector to win instead. */
+.site-filter-menu .site-filter-option { display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 7px; cursor: pointer; color: var(--fn-text); }
+.site-filter-option:hover { background: var(--fn-accent-soft); }
+.site-filter-option input { flex: none; width: 15px; height: 15px; accent-color: var(--fn-accent); }
+.site-filter-option-id { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 11.5px/1.4 ui-monospace, monospace; }
+.site-filter-option-count { flex: none; padding: 1px 7px; border-radius: 999px; background: var(--fn-accent-soft); color: var(--fn-text-muted); font-size: 10px; font-weight: 700; }
+.template-list { display: grid; gap: 8px; margin-top: 12px; }
+.template-item { position: relative; }
+.template-row { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--fn-border); border-radius: 9px; background: var(--fn-surface); min-width: 0; }
+.template-row input[type="checkbox"] { flex: none; width: 15px; height: 15px; }
+.template-row-text { all: unset; box-sizing: border-box; flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; white-space: normal; font-size: 13px; line-height: 1.4; max-height: 37px; font-weight: 650; overflow-wrap: anywhere; cursor: pointer; color: inherit; font-family: inherit; }
+.template-row-text.expanded { -webkit-line-clamp: unset; max-height: none; overflow: visible; white-space: pre-wrap; }
+.template-row-text:focus-visible { outline: 3px solid var(--fn-focus-ring); outline-offset: 2px; }
+.template-row-actions { position: absolute; right: 8px; top: 8px; z-index: 2; display: inline-flex; gap: 2px; opacity: 0; pointer-events: none; transition: opacity 150ms ease; }
+/* `button.danger`'s padding is otherwise unopposed here (nothing else sets
+   padding on this element) and would silently win the cascade, breaking the
+   icon's grid centering inside its circular hit area - reset to 0. */
+.template-row-actions .action.danger { margin-left: 10px; padding: 0; border: 1px solid var(--fn-danger-border); background: var(--fn-surface); color: var(--fn-danger); }
+.template-item:hover .template-row-actions,
+.template-item:focus-within .template-row-actions { opacity: 1; }
+.template-row-actions .action { display: grid; place-items: center; width: 26px; height: 26px; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--fn-surface) 90%, transparent); box-shadow: 0 1px 3px rgb(var(--fn-shadow) / 14%); color: var(--fn-icon); cursor: pointer; pointer-events: auto; }
+.template-row-actions .action svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.template-row-actions .action [data-fillnest-asset] { width: 15px; height: 15px;  }
+.template-row-actions .action:hover { background: var(--fn-surface); color: var(--fn-accent-hover); }
+.template-row-actions .action.danger:hover { background: var(--fn-danger-soft); color: var(--fn-danger-hover); }
+.editor-inline, .confirm-inline { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--fn-border); border-radius: 9px; background: var(--fn-surface); }
+.template-length-counter { margin: 4px 0 0; text-align: right; color: var(--fn-text-muted); font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums; cursor: help; }
+.template-length-counter.over { color: var(--fn-danger); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+/* Visually distinct from a Template row (which uses a white background) so
+   this reads as a control area, not another item in the list. */
+.selection-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; padding: 10px 12px; border: 1px solid var(--fn-accent-soft-hover); border-radius: 9px; background: var(--fn-accent-soft); font-size: 12px; }
+.filter-toggle { border: 1px solid var(--fn-border-strong); border-radius: 999px; padding: 6px 12px; background: var(--fn-surface); color: var(--fn-text-secondary); font-size: 12px; font-weight: 650; cursor: pointer; }
+.filter-toggle.selected { border-color: var(--fn-accent); background: var(--fn-accent); color: var(--fn-on-accent); }
+.batch-delete-confirm { display: grid; gap: 8px; }
+.impact-detail { display: grid; gap: 4px; padding: 10px; border: 1px solid var(--fn-border); border-radius: 8px; background: var(--fn-canvas); font-size: 12px; color: var(--fn-text-secondary); }
+.impact-detail p { margin: 0; }
+.editor-inline textarea { box-sizing: border-box; width: 100%; min-height: 100px; padding: 10px 0 10px 10px; border: 1px solid var(--fn-border-strong); border-radius: 8px; font: 13px/1.5 inherit; }
+.editor-actions, .confirm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.editor-actions button:not(.primary), .confirm-actions button:not(.danger) { border: 1px solid var(--fn-border-strong); border-radius: 8px; padding: 8px 12px; background: var(--fn-surface); cursor: pointer; font-weight: 650; }
+.confirm-inline span { color: var(--fn-text-muted); font-size: 13px; }
+button.danger { border: 0; border-radius: 8px; padding: 9px 12px; color: var(--fn-on-danger); background: var(--fn-danger); font-weight: 650; cursor: pointer; }
+button.danger:hover { background: var(--fn-danger-hover); }
+button.danger:disabled { background: var(--fn-surface); border: 1px solid var(--fn-border); color: var(--fn-text-disabled); cursor: default; }
+button.secondary { border: 1px solid var(--fn-border-strong); border-radius: 8px; padding: 8px 10px; background: var(--fn-surface); color: var(--fn-text-secondary); font-size: 12px; font-weight: 650; cursor: pointer; white-space: nowrap; }
+.sites-filter-row { display: flex; align-items: end; gap: 8px; margin: 12px 0 16px; }
+.sites-filter-row .search { flex: 1; min-width: 0; }
+.sites-status-filter { display: grid; gap: 6px; color: var(--fn-text-muted); font-size: 11px; }
+.sites-status-filter select { box-sizing: border-box; padding: 10px 8px; border: 1px solid var(--fn-border-strong); border-radius: 8px; background: var(--fn-surface); font-size: 12px; color: var(--fn-text-secondary); }
+.facet-pill { flex: none; padding: 1px 7px; border-radius: 999px; background: var(--fn-accent-soft); color: var(--fn-text-muted); font-size: 10px; font-weight: 700; }
+.facet-pill.warning { background: var(--fn-danger-soft); color: var(--fn-danger); }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--fn-border); border-radius: 9px; background: var(--fn-surface); }
+
+/* Sites is a flat list of Permission Origins - one row per granted address,
+   never per Site. Site identity appears only in each row's subline. */
+.sites-lead { margin: 0 0 14px; color: var(--fn-text-muted); font-size: 11.5px; line-height: 1.5; }
+.address-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding: 10px 12px; border: 1px solid var(--fn-accent-soft-hover); border-radius: 9px; background: var(--fn-accent-soft); font-size: 11.5px; }
+.address-toolbar-select { display: flex; align-items: center; gap: 7px; min-width: 0; cursor: pointer; }
+.address-toolbar-select input { flex: none; width: 15px; height: 15px; accent-color: var(--fn-accent); }
+.address-toolbar-select span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.address-toolbar-actions { flex: none; display: inline-flex; gap: 8px; }
+.address-toolbar-actions button { border-radius: 8px; padding: 8px 11px; font-size: 11.5px; font-weight: 650; cursor: pointer; }
+
+.filter-toggle-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+
+/* By-site groups reuse the exact tree-row vocabulary from Templates' By
+   location view (.tree-node/.tree-chevron/.node-label/.tree-node-count) -
+   only the address rows nested inside a group are Sites-page markup. */
+.site-groups { list-style: none; margin: 0 0 4px; padding: 0; }
+.group-children { margin: 4px 0 8px 28px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.group-no-access-line { margin: 0; padding: 2px 0 4px; color: var(--fn-text-muted); font-size: 11.5px; line-height: 1.5; }
+/* Clearing saved fields is already reachable via the toolbar once a row is
+   selected, so a group only needs one action of its own: the Templates
+   handoff, right-aligned rather than sitting alone at the left edge. */
+.flat-rules { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--fn-border); display: grid; gap: 10px; }
+.flat-rules-heading { color: var(--fn-text-muted); font-size: 11.5px; font-weight: 650; }
+.logical-page-rules { display: grid; gap: 6px; }
+.logical-page-rule-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; padding: 9px 11px; border: 1px solid var(--fn-border); border-radius: 8px; background: var(--fn-surface-sunken); }
+.logical-page-rule-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 11px/1.4 ui-monospace, monospace; color: var(--fn-text-secondary); }
+.logical-page-rule-row button { flex: none; }
+.shared-template-sets { display: grid; gap: 6px; }
+.shared-template-set-row { border: 1px solid var(--fn-border); border-radius: 8px; background: var(--fn-surface-sunken); overflow: hidden; }
+.shared-template-set-row .tree-node:hover { background: transparent; }
+.shared-template-set-detail { display: grid; gap: 10px; padding: 2px 11px 11px 38px; }
+.shared-template-set-members { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.shared-template-set-members > li { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 7px 9px; border: 1px solid var(--fn-border); border-radius: 7px; background: var(--fn-surface); font-size: 12px; }
+.shared-set-member-head button { flex: none; }
+.shared-template-set-footer { display: flex; justify-content: flex-end; }
+/* Task 040: the Templates page's Shared Sets tab. */
+.shared-set-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-width: 0; }
+.shared-set-title:has(> .alias-editor) { flex: 1; }
+.shared-set-title:has(> .alias-editor) .shared-set-summary,
+.shared-set-member-identity:has(> .alias-editor) .shared-set-member-location,
+.shared-set-member-head:has(.alias-editor) > button { display: none; }
+.shared-set-summary { color: var(--fn-text-muted); font-size: 11.5px; font-weight: 400; }
+.shared-set-heading { margin: 0 0 6px; color: var(--fn-text-muted); font-size: 11px; font-weight: 700; }
+.shared-set-templates { margin: 0; padding-left: 20px; display: grid; gap: 4px; color: var(--fn-text); font-size: 12px; }
+.shared-set-templates li { overflow-wrap: anywhere; }
+.shared-set-member-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.shared-set-member-identity { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
+.shared-set-member-identity:has(> .alias-editor) { flex: 1; }
+.shared-set-member-identity .node-label { font-weight: 650; overflow-wrap: anywhere; }
+.shared-set-member-name { font-weight: 650; overflow-wrap: anywhere; }
+.shared-set-member-location { color: var(--fn-text-muted); font-size: 11.5px; overflow-wrap: anywhere; }
+.shared-set-differences { margin: 0; padding-left: 16px; display: grid; gap: 2px; color: var(--fn-text-secondary); font-size: 11.5px; }
+.shared-set-differences li { overflow-wrap: anywhere; }
+.shared-set-note { margin: 0; color: var(--fn-text-muted); font-size: 11.5px; }
+.shared-sets-empty { color: var(--fn-text-muted); }
+.group-footer { box-sizing: border-box; min-width: 0; display: flex; justify-content: flex-end; }
+.group-templates-link { flex: none; border: 0; background: transparent; padding: 0; color: var(--fn-accent-hover); font-size: 11px; font-weight: 650; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.group-templates-link:hover { color: var(--fn-accent-strong); }
+
+/* minmax(0, 1fr) overrides a grid item's automatic min-width, which would
+   otherwise hold each row at its min-content width - the mono origin plus
+   the fixed-width mode control - and push the page wider than the panel on
+   a narrow side panel. */
+.address-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.address-row { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--fn-border); border-radius: 9px; background: var(--fn-surface); }
+.address-row.current { border-color: var(--fn-accent-border); box-shadow: 0 1px 3px color-mix(in srgb, var(--fn-accent) 12%, transparent); }
+.address-row > input[type="checkbox"] { flex: none; width: 15px; height: 15px; accent-color: var(--fn-accent); }
+/* Single-line with ellipsis by default - an origin is an identifier, so a
+   wrapped one reads as two addresses. Clicking it reveals the full text
+   in place (word-break, no ellipsis) rather than truncating it forever;
+   clicking again re-truncates. A real <button>, not a styled span, so it's
+   reachable and announced without relying on hover/title. */
+.address-origin { flex: 1; min-width: 0; display: block; border: 0; background: transparent; padding: 0; margin: 0; text-align: left; font: 600 11px/1.4 ui-monospace, monospace; color: var(--fn-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.address-origin.expanded { overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+.address-row .pagination-arrow:disabled { border-color: var(--fn-border); color: var(--fn-control-off); cursor: default; }
+
+.clean-up-overlay { position: fixed; inset: 0; z-index: 10; }
+.clean-up-backdrop { position: absolute; inset: 0; background: var(--fn-overlay); }
+.clean-up-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 80vh; overflow-y: auto; scrollbar-gutter: stable; box-sizing: border-box; padding: 10px 6px 20px 16px; border-radius: 16px 16px 0 0; background: var(--fn-surface); box-shadow: 0 -10px 30px rgb(var(--fn-shadow) / 18%); display: flex; flex-direction: column; gap: 12px; }
+.clean-up-grabber { align-self: center; width: 38px; height: 4px; border-radius: 2px; background: var(--fn-border); }
+.clean-up-title { font-size: 15px; font-weight: 750; }
+.remove-sheet-origins { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.remove-sheet-origins li { padding: 9px 11px; border: 1px solid var(--fn-border); border-radius: 8px; background: var(--fn-surface-sunken); font: 600 11px/1.4 ui-monospace, monospace; overflow-wrap: anywhere; }
+.remove-sheet-body { margin: 0; color: var(--fn-text-secondary); font-size: 12.5px; line-height: 1.55; }
+.remove-sheet-note { margin: 0; color: var(--fn-text-muted); font-size: 11.5px; line-height: 1.55; }
+.remove-sheet-link { align-self: flex-start; border: 0; background: transparent; padding: 0; color: var(--fn-accent-hover); font-size: 12px; font-weight: 650; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.remove-sheet-link:hover { color: var(--fn-accent-strong); }
+.keep-as-global { display: grid; gap: 8px; }
+.keep-as-global-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.keep-as-global-controls .search { flex: 1; min-width: 140px; }
+.keep-as-global-list { list-style: none; margin: 0; padding: 8px 0 8px 8px; border: 1px solid var(--fn-border); border-radius: 8px; background: var(--fn-canvas); max-height: 160px; overflow-y: auto; scrollbar-gutter: stable; display: grid; gap: 4px; }
+.keep-as-global-list label { font-size: 12px; }
+
+.setting-row p, .setting-note p { margin: 5px 0 0; }
+.setting-note { margin-top: 12px; padding: 12px 0; border-top: 1px solid var(--fn-border); }
+.setting-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--fn-border); }
+.setting-section h2 { margin: 0 0 12px; font-size: 15px; font-weight: 700; color: var(--fn-text); }
+.setting-section h3 { margin: 0 0 4px; font-size: 13.5px; font-weight: 650; color: var(--fn-text); }
+.warning-callout { margin-top: 8px; padding: 8px 10px; border-radius: 6px; background: var(--fn-warning-soft); border: 1px solid var(--fn-warning-border); color: var(--fn-warning); font-size: 11.5px; line-height: 1.45; }
+.setting-row.danger-zone { margin-top: 20px; border-color: var(--fn-danger-border); background: var(--fn-danger-soft); }
+.setting-row.danger-zone h2 { color: var(--fn-danger-hover); }
+.setting-row.danger-zone p { color: var(--fn-danger-hover); }
+.setting-row.danger-zone > div { flex: 1; min-width: 0; }
+.setting-row.danger-zone > button.danger { flex: none; }
+.setting-row.danger-zone .batch-delete-confirm { width: 100%; }
+.setting-row-stacked { margin-top: 10px; }
+/* The one warning attached to an action rather than standing on its own.
+   Hover is not the only way in: it is a real focusable control whose
+   accessible name is the whole warning, and the tooltip opens on focus and on
+   tap as well. It opens downward because the panel content scrolls and an
+   upward tooltip on the first row would be clipped by the scroll container. */
+.setting-hint { position: relative; display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 6px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--fn-warning); vertical-align: -3px; cursor: help; }
+.setting-hint svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.setting-hint:hover { background: var(--fn-warning-soft); }
+.setting-hint:focus-visible { outline: 3px solid var(--fn-focus-ring); outline-offset: 2px; }
+.setting-hint[data-tooltip]::after { content: attr(data-tooltip); position: absolute; left: -4px; top: calc(100% + 6px); z-index: 6; width: max-content; max-width: 260px; padding: 7px 9px; border-radius: 6px; border: 1px solid var(--fn-warning-border); background: var(--fn-warning-soft); color: var(--fn-warning); font-size: 11.5px; font-weight: 600; line-height: 1.4; white-space: normal; text-align: left; box-shadow: 0 6px 18px rgb(var(--fn-shadow) / 18%); opacity: 0; pointer-events: none; transform: translateY(-2px); transition: opacity 120ms ease, transform 120ms ease; }
+.setting-hint[data-tooltip]:hover::after, .setting-hint[data-tooltip]:focus::after { opacity: 1; transform: translateY(0); }
+
+/* Appearance (Task 034). The swatch is a miniature of the surface the theme
+   paints - canvas, accent bar, card, two lines of text - drawn entirely from
+   that theme's own tokens, so the preview cannot drift from the result. */
+.theme-chooser { display: grid; gap: 12px; }
+.theme-mode { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--fn-border); border-radius: 999px; background: var(--fn-surface-sunken); width: fit-content; }
+.theme-mode-option { padding: 5px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--fn-text-muted); font-size: 12px; font-weight: 650; cursor: pointer; }
+.theme-mode-option:hover { color: var(--fn-text); }
+.theme-mode-option.selected { background: var(--fn-surface); color: var(--fn-accent); box-shadow: 0 1px 2px rgb(var(--fn-shadow) / 12%); }
+.theme-swatches { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; }
+.theme-swatch { display: grid; gap: 2px; width: 100%; padding: 8px; border: 1px solid var(--fn-border); border-radius: 10px; background: var(--fn-surface); text-align: left; cursor: pointer; transition: border-color 100ms ease, box-shadow 100ms ease; }
+.theme-swatch:hover { border-color: var(--fn-accent-border); }
+.theme-swatch.selected { border-color: var(--fn-accent); box-shadow: inset 0 0 0 1px var(--fn-accent); }
+.theme-swatch-preview { display: block; position: relative; height: 46px; margin-bottom: 6px; border: 1px solid; border-radius: 7px; overflow: hidden; }
+.theme-swatch-bar { position: absolute; inset: 0 0 auto 0; height: 10px; }
+.theme-swatch-card { position: absolute; left: 8px; right: 8px; top: 17px; display: grid; gap: 4px; padding: 6px; border: 1px solid; border-radius: 4px; }
+.theme-swatch-line { display: block; height: 3px; border-radius: 2px; }
+.theme-swatch-line.short { width: 55%; }
+.theme-swatch-name { font-size: 12.5px; font-weight: 650; color: var(--fn-text); }
+.theme-swatch-description { font-size: 11px; color: var(--fn-text-muted); line-height: 1.35; }
+.panel-error { color: var(--fn-danger); }
+.restore-impact-summary { display: grid; gap: 8px; margin: 8px 0; }
+.restore-impact-summary h3 { margin: 0; font-size: 13px; font-weight: 700; color: var(--fn-text); }
+.restore-impact-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.restore-impact-table th, .restore-impact-table td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--fn-border); }
+.restore-impact-table th { font-weight: 650; color: var(--fn-icon); background: var(--fn-canvas); }
+.restore-impact-table td:nth-child(2), .restore-impact-table td:nth-child(3) { text-align: right; }
+.restore-impact-table th:nth-child(2), .restore-impact-table th:nth-child(3) { text-align: right; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+.library-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.library-tabs button { border: 1px solid var(--fn-border-strong); border-radius: 999px; padding: 6px 12px; background: var(--fn-surface); color: var(--fn-text-secondary); font-size: 12px; font-weight: 650; cursor: pointer; }
+.library-tabs button.selected { border-color: var(--fn-accent); background: var(--fn-accent); color: var(--fn-on-accent); }
+
+.library-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 12px 0; }
+.library-filters label { display: grid; gap: 4px; color: var(--fn-text-muted); font-size: 11px; min-width: 0; }
+.library-filters select { box-sizing: border-box; max-width: 100%; padding: 8px; border: 1px solid var(--fn-border-strong); border-radius: 8px; background: var(--fn-surface); font-size: 12px; }
+.library-filters .checkbox-field { flex-direction: row; align-items: center; gap: 6px; }
+
+.location-tree, .location-tree ul { list-style: none; margin: 0; padding: 0; }
+.location-tree { margin-top: 12px; }
+.location-tree ul { padding-left: 0; }
+.tree-node { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 7px 4px; border-radius: 8px; }
+.tree-node:hover { background: var(--fn-accent-soft); }
+.tree-chevron { flex: none; display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--fn-text-muted); cursor: pointer; font-size: 17px; }
+.tree-chevron:hover { background: var(--fn-border); }
+.node-label-group { display: inline-flex; align-items: center; gap: 4px; min-width: 0; flex: 1; }
+.node-label { min-width: 0; overflow-wrap: anywhere; font-size: 13px; font-weight: 600; color: var(--fn-text); text-align: left; }
+/* Task 023 Addendum B5 (2): the name itself is the rename control, matching
+   the Picker's own alias trigger. The hover/active treatment is what tells a
+   sighted user the name is interactive, now that there is no pencil button. */
+.node-label-trigger { display: inline-flex; align-items: center; min-width: 0; min-height: 24px; margin: -2px -5px; padding: 2px 5px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background 100ms ease, box-shadow 100ms ease, transform 100ms ease; }
+.node-label-trigger:hover { border-color: var(--fn-accent-border); background: var(--fn-accent-soft); box-shadow: inset 0 2px 4px rgb(var(--fn-shadow) / 20%); transform: translateY(1px); }
+.node-label-trigger:focus-visible { outline: 2px solid var(--fn-accent); outline-offset: 2px; border-color: var(--fn-accent-border); box-shadow: inset 0 1px 3px rgb(var(--fn-shadow) / 16%); }
+.node-label-trigger:active { border-color: var(--fn-accent-border); background: var(--fn-accent-soft-hover); box-shadow: inset 0 3px 5px rgb(var(--fn-shadow) / 26%); transform: translateY(1px); }
+.tree-node-count { flex: none; margin-left: auto; padding: 1px 7px; border-radius: 999px; background: var(--fn-accent-soft); color: var(--fn-text-muted); font-size: 10px; font-weight: 700; }
+/* Owner QA 2026-09-11: an editor squeezed between its row's other contents
+   showed one or two letters of the name it opened on. It takes the room it
+   needs, and the row's other contents step aside while it is open, as the
+   Picker's Field name editor already does. */
+.alias-editor { display: inline-flex; align-items: center; gap: 6px; flex: 1 1 auto; min-width: min(100%, 240px); }
+.alias-editor input { box-sizing: border-box; min-width: 8em; flex: 1; padding: 5px 8px; border: 1px solid var(--fn-accent-border); border-radius: 6px; font-size: 13px; }
+.alias-editor button { border: 1px solid var(--fn-border-strong); border-radius: 6px; padding: 4px 8px; background: var(--fn-surface); font-size: 11px; font-weight: 650; cursor: pointer; white-space: nowrap; }
+.alias-editor button.primary { border-color: transparent; background: var(--fn-accent); color: var(--fn-on-accent); }
+.tree-templates { margin: 4px 0 6px 28px; display: grid; gap: 8px; }
+
+.field-first-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px; }
+.field-first-header h1 { margin: 0; }
+.field-first-count { color: var(--fn-text-muted); font-size: 12px; }
+
+.field-card { margin: 14px 0; border: 1px solid var(--fn-border); border-radius: 11px; background: var(--fn-surface); overflow: hidden; }
+.field-card-header { padding: 10px 12px; border-radius: 0; }
+.field-card-labels { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.field-card-labels .node-label-group .node-label { font-size: 13px; font-weight: 750; }
+.field-card-count { flex: none; color: var(--fn-text-muted); font-size: 10px; font-weight: 700; }
+
+.field-first-options { list-style: none; margin: 0; padding: 2px 12px 10px; display: grid; gap: 2px; }
+.field-first-option { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid var(--fn-surface-sunken); min-width: 0; }
+.field-first-option:first-child { border-top: none; }
+.field-first-rank { flex: none; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 4px; background: var(--fn-accent-soft); color: var(--fn-accent); font-size: 9.5px; font-weight: 750; }
+.field-first-option-content { flex: 1; min-width: 0; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.field-first-option .editor-inline { flex: 1; }
+.field-first-option .action { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 50%; background: transparent; color: var(--fn-icon); cursor: pointer; }
+.field-first-option .action:hover { background: var(--fn-accent-soft); color: var(--fn-accent-hover); }
+.field-first-option .action svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.field-first-option .action [data-fillnest-asset] { width: 13px; height: 13px;  }
+.field-first-option .action.danger { padding: 0; border: 1px solid var(--fn-danger-border); background: var(--fn-surface); color: var(--fn-danger); }
+.field-first-option .action.danger:hover { background: var(--fn-danger-soft); color: var(--fn-danger-hover); }
+
+.not-offered-anywhere { margin: 14px 0; border: 1px dashed var(--fn-border-strong); border-radius: 11px; background: var(--fn-surface); }
+.not-offered-anywhere-toggle { display: flex; align-items: center; gap: 9px; width: 100%; box-sizing: border-box; padding: 11px 12px; border: 0; background: transparent; cursor: pointer; text-align: left; color: inherit; font: inherit; }
+.not-offered-anywhere-toggle:hover { background: var(--fn-surface-sunken); }
+.not-offered-anywhere-title { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 700; color: var(--fn-icon); }
+.not-offered-anywhere-count { flex: none; color: var(--fn-text-muted); font-size: 10px; }
+.not-offered-anywhere .template-list { padding: 0 12px 12px; margin-top: 0; }
+
+.field-first-footnote { margin: 14px 0 0; color: var(--fn-text-muted); font-size: 11px; line-height: 1.55; }
+
+/* Windows High Contrast Mode (Task 023 Addendum B, finding B4).
+ *
+ * In forced-colors mode the OS replaces every colour and drops box-shadow, so
+ * anything whose meaning was carried by `background` alone becomes
+ * indistinguishable. These rules restate that meaning with borders, system
+ * colour keywords and outlines. They apply only inside this media query and
+ * cannot affect normal rendering.
+ *
+ * Written without a high-contrast session to verify against: they follow the
+ * documented behaviour of forced-colors and the system colour keywords, and
+ * they are conservative - every rule adds a distinction rather than removing
+ * one. `tasks/023-cross-surface-accessibility-hardening.md` keeps B4 open until
+ * someone can actually look. */
+@media (forced-colors: active) {
+  /* The Website Access switch distinguished on from off by track colour only.
+   * The thumb's position is a second cue, but the thumb was white on a track
+   * that also becomes a system colour, so it could vanish. */
+  /* Selected navigation and filter states were background-only. */
+  nav button.selected { border-bottom: 3px solid Highlight; }
+  .filter-toggle.selected { background: Highlight; color: HighlightText; border-color: Highlight; }
+
+  /* Focus must stay visible and must use the system's focus colour. */
+  button:focus-visible,
+  input:focus-visible,
+  .template-row-text:focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
+
+  /* Destructive actions lose their red. The button's own text still says what
+   * it does; a heavier border keeps it from reading as an ordinary control. */
+  button.danger, .side-panel-notification-action.danger { border: 2px solid CanvasText; }
+  button.danger:disabled { border-color: GrayText; color: GrayText; }
+
+  /* The backup privacy tooltip is a tinted panel; it needs a real edge. */
+  .setting-hint[data-tooltip]::after { border: 1px solid CanvasText; background: Canvas; color: CanvasText; }
+
+  /* Cards and rows separated only by a tinted background need real edges. */
+  .template-item, .field-first-option, .address-row { border: 1px solid CanvasText; }
+}
+
+/* Reduced motion (Task 023 Addendum B, finding B3).
+ *
+ * Every transition here is a short opacity, background or transform tween.
+ * Disabling them keeps each end state exactly as it was and only removes the
+ * movement between states, so nothing becomes unreachable or invisible - a
+ * toggle thumb jumps to its position instead of sliding, a hover-revealed
+ * action appears at once. Applies only when the reader has asked for reduced
+ * motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* Task 042: where to report a problem. Owner QA 2026-09-15: at the foot of
+   Overview, just above the result region, under a heading that stands out. */
+.overview-page { display: flex; flex-direction: column; min-height: 100%; }
+.overview-page > .activation { margin-top: 4px; }
+.feedback { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--fn-border); }
+.feedback h2 { margin: 18px 0 4px; color: var(--fn-text); font-size: 15px; font-weight: 750; }
+.feedback > p { margin: 0 0 8px; }
+.feedback-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; color: var(--fn-text-muted); font-size: 12px; }
+.feedback-address { color: var(--fn-text); font-weight: 600; user-select: all; overflow-wrap: anywhere; }
+.feedback-row button { flex: none; padding: 4px 10px; font-size: 11.5px; }

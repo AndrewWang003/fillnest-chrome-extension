@@ -1,0 +1,2 @@
+import { defineConfig } from 'vitest/config';
+export default defineConfig({test:{include:['tasks/evidence/phase-one-audit-2026-09-11/residual-runtime-probe.test.ts']}});

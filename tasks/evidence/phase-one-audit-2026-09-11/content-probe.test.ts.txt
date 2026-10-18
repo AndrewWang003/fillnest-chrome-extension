@@ -1,0 +1,58 @@
+// @vitest-environment happy-dom
+// Audit probes characterize current behavior, not desired regression outcomes.
+import { expect, it, vi } from "vitest";
+import {
+  fieldObservedTitle,
+  readAccessibleName,
+  readSafeMetadata,
+  type RichTextField,
+} from "../../../src/fields/dom-field";
+import { buildPageIdentityKey } from "../../../src/recognition/recognition-evidence";
+import { insertionWasAccepted } from "../../../src/insertion/apply-text-insertion";
+
+it("wrapper label incorporates editor text into safe metadata and display title", () => {
+  document.body.innerHTML = '<label>Message<div contenteditable="true">CONFIDENTIAL EXISTING DRAFT</div></label>';
+  const field = document.querySelector("div") as RichTextField;
+  expect(readAccessibleName(field)).toBe("MessageCONFIDENTIAL EXISTING DRAFT");
+  expect(readSafeMetadata(field).accessibleName).toContain("CONFIDENTIAL EXISTING DRAFT");
+  expect(fieldObservedTitle(field)).toContain("CONFIDENTIAL EXISTING DRAFT");
+});
+
+it("hash route semantic queries collapse onto one page", () => {
+  const customers = buildPageIdentityKey("https://example.test/app#/form?entity=customers");
+  const invoices = buildPageIdentityKey("https://example.test/app#/form?entity=invoices");
+  expect(customers).toBe("/app/form");
+  expect(invoices).toBe(customers);
+});
+
+it("presence-only verification cannot distinguish a refused duplicate insertion", () => {
+  const field = document.createElement("div") as RichTextField;
+  field.innerText = "Hello";
+  expect(insertionWasAccepted(field, "Hello")).toBe(true);
+});
+
+it("contenteditable removal leaves a marker on a now unsupported field", async () => {
+  document.body.innerHTML = '<div contenteditable="true" aria-label="Message"></div>';
+  const field = document.querySelector("div")!;
+  // happy-dom does not implement the browser's inherited editing-host state.
+  Object.defineProperty(field, "isContentEditable", {
+    get() { return field.getAttribute("contenteditable") === "true"; },
+  });
+  vi.stubGlobal("chrome", {
+    runtime: {
+      sendMessage: vi.fn(async (request: { type: string }) =>
+        request.type === "GET_ACTIVATION_SNAPSHOT"
+          ? { ok: true, value: {
+            global: "active",
+            page: { status: "available", origin: "http://localhost:80", pattern: "http://localhost/*", websiteAccess: true, originActivation: "active" },
+          } }
+          : { ok: true, value: null }),
+      onMessage: { addListener: vi.fn(), removeListener: vi.fn() },
+    },
+  });
+  await import("../../../src/content/content-script");
+  await vi.waitFor(() => expect(field.hasAttribute("data-fillnest-field")).toBe(true));
+  field.setAttribute("contenteditable", "false");
+  await new Promise((resolve) => setTimeout(resolve, 80));
+  expect(field.hasAttribute("data-fillnest-field")).toBe(true);
+});

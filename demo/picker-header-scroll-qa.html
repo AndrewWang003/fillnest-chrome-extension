@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FillNest - Picker Header And Scrollbar QA Fixture</title>
+  <style>
+    body { max-width: 760px; margin: 32px auto; padding: 0 16px; font: 15px/1.5 system-ui, sans-serif; color: #1f2933; }
+    h1 { font-size: 22px; }
+    code { padding: 1px 4px; border-radius: 4px; background: #eef1f4; }
+    form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
+    label { display: grid; gap: 3px; font-size: 13px; font-weight: 600; }
+    input, textarea { font: inherit; padding: 6px 8px; border: 1px solid #9aa5b1; border-radius: 6px; }
+    .wide { grid-column: 1 / -1; }
+    textarea { min-height: 90px; }
+  </style>
+</head>
+<body>
+  <h1>Picker Header And Scrollbar - QA Fixture</h1>
+  <p>
+    Hands-on checks for Task 044 (the Picker header) and Task 045 (scrollbar
+    space). Serve this folder over HTTP (<code>python3 -m http.server 8973</code>
+    in <code>demo/</code>), open
+    <code>http://localhost:8973/picker-header-scroll-qa.html</code>, and allow
+    FillNest on this address. Twenty ordinary Fields, so the Picker's Field list
+    is long enough to scroll; "Customer reply" sits in the middle, so some
+    Fields come before it. Site-neutral markup only.
+  </p>
+  <form onsubmit="return false">
+    <label>First name <input name="first-name"></label>
+    <label>Last name <input name="last-name"></label>
+    <label>Company <input name="company"></label>
+    <label>Job title <input name="job-title"></label>
+    <label>Department <input name="department"></label>
+    <label>Order number <input name="order-number"></label>
+    <label>Subject <input name="subject"></label>
+    <label>Reference <input name="reference"></label>
+    <label class="wide">Customer reply <textarea name="customer-reply"></textarea></label>
+    <label>City <input name="city"></label>
+    <label>Region <input name="region"></label>
+    <label>Postal code <input name="postal-code"></label>
+    <label>Country <input name="country"></label>
+    <label>Website <input name="website"></label>
+    <label>Account manager <input name="account-manager"></label>
+    <label>Priority <input name="priority"></label>
+    <label>Category <input name="category"></label>
+    <label>Tags <input name="tags"></label>
+    <label class="wide">Internal note <textarea name="internal-note"></textarea></label>
+  </form>
+</body>
+</html>

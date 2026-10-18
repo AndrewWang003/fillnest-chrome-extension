@@ -1,0 +1,92 @@
+/* The styles for `CurrentWebsiteAccess`, the one component the Popup and the
+ * Side Panel Overview both render.
+ *
+ * Task 034 finding F4 named "two button vocabularies" across the two surfaces.
+ * Most of that is each surface's own buttons and stays where it is - a wide
+ * rename with no user-visible gain. This is the part that was a real defect in
+ * waiting: `.primary-button` and `.notice.warning` belong to a **shared**
+ * component and were declared twice, differently, so the Allow-access button
+ * had one margin in the Popup and another in Overview and nothing said which
+ * was intended. One definition, next to the component that uses it. */
+/* Owner QA 2026-09-15: two switches, each titled for what it turns on and
+ * with one line on what it affects, then the one next step before FillNest
+ * works here. */
+.activation { display: grid; gap: 12px; }
+.activation-block { padding: 12px 0 0; border-top: 1px solid var(--fn-border); }
+.activation-block:first-child { padding-top: 0; border-top: 0; }
+.activation-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.activation-row > .toggle-switch { flex: none; white-space: nowrap; }
+.activation-row h2 { margin: 0; color: var(--fn-text); font-size: 13.5px; font-weight: 700; line-height: 1.3; }
+.activation-row p { margin: 3px 0 0; color: var(--fn-text-muted); font-size: 12px; line-height: 1.45; }
+.activation-host { color: var(--fn-text-secondary); font-weight: 500; overflow-wrap: anywhere; }
+.activation-status { margin: 0; padding: 8px 10px; border-radius: 8px; background: var(--fn-warning-soft); color: var(--fn-warning); font-size: 12.5px; font-weight: 650; line-height: 1.4; }
+.activation-status.ready { background: var(--fn-success-soft); color: var(--fn-success); }
+
+.primary-button {
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--fn-on-accent);
+  background: var(--fn-accent);
+  font: inherit;
+  font-weight: 650;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.primary-button:hover:not(:disabled) { background: var(--fn-accent-hover); }
+
+/* Owner QA 2026-09-15: the action on one line, larger, the site under it. */
+.allow-access-button { display: grid; justify-items: center; gap: 3px; padding: 11px 12px; text-align: center; }
+
+/* Owner QA 2026-09-15: a new user's eye goes to Allow access. While the site
+   is not authorized the button breathes - a glow that swells for two seconds
+   and ebbs for two, the pace of a resting breath (about 15 a minute), so the
+   three to five seconds someone spends on this surface hold about one breath.
+   It holds still under the pointer or keyboard focus, and not at all for
+   anyone who asked for reduced motion, who gets the glow at rest instead. */
+@keyframes fn-allow-access-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fn-accent) 0%, transparent); filter: brightness(1); }
+  50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--fn-accent) 32%, transparent); filter: brightness(1.1); }
+}
+.allow-access-button:not(:disabled) { animation: fn-allow-access-breathe 4s ease-in-out infinite; }
+.allow-access-button:hover, .allow-access-button:focus-visible { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .allow-access-button:not(:disabled) { animation: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--fn-accent) 28%, transparent); }
+}
+.allow-access-action { font-size: 15px; font-weight: 750; line-height: 1.2; }
+.allow-access-origin { font-size: 11.5px; font-weight: 500; line-height: 1.3; opacity: .9; overflow-wrap: anywhere; }
+.primary-button:disabled { opacity: 0.6; cursor: default; }
+.primary-button:focus-visible { outline: 3px solid var(--fn-focus-ring); outline-offset: 2px; }
+
+.notice.warning {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 10px;
+  border-radius: 8px;
+  color: var(--fn-warning);
+  background: var(--fn-warning-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notice.warning button {
+  justify-self: start;
+  padding: 6px 10px;
+  border: 1px solid var(--fn-warning-border);
+  border-radius: 6px;
+  color: var(--fn-warning);
+  background: var(--fn-surface);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+@media (forced-colors: active) {
+  .primary-button { border: 2px solid CanvasText; }
+  .primary-button:disabled { border-color: GrayText; color: GrayText; opacity: 1; }
+  .notice.warning, .activation-status { border: 1px solid CanvasText; }
+}

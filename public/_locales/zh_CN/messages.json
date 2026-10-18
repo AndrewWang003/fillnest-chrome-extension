@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "FillNest",
+    "description": "The extension's name. Left in English on purpose: it is the product's name, not a word."
+  },
+  "extensionDescription": {
+    "message": "为每个输入框准备好的纯文本模版，插入与否始终由你决定。",
+    "description": "The extension's one-line description, shown in Chrome and in the Web Store."
+  }
+}

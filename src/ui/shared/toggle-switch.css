@@ -1,0 +1,102 @@
+/* The one switch control, shared by the Side Panel and the Popup.
+ *
+ * Task 034 merged the two component copies; this merges the two stylesheet
+ * copies behind them, which had drifted to three different sizes with nothing
+ * saying why. The rule is now explicit and there is one place to change it:
+ *
+ *   default  - a switch that is a control in its own right (Overview, Popup)
+ *   .compact - a switch inside a dense list row (the Sites page's addresses)
+ *
+ * The size is three custom properties rather than three re-declared rules, so
+ * a variant states only what differs and the thumb's travel is computed rather
+ * than restated - the arithmetic that used to be a hand-written `translateX`
+ * per size, and the easiest thing to get wrong when a size changed. */
+.toggle-switch {
+  /* Layout only, so deliberately not `--fn-`: that prefix means a theme token,
+     and a test checks that every `--fn-` a stylesheet reads is one. */
+  --toggle-track-width: 46px;
+  --toggle-track-height: 26px;
+  --toggle-thumb-size: 22px;
+  --toggle-inset: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.toggle-switch.compact {
+  --toggle-track-width: 38px;
+  --toggle-track-height: 21px;
+  --toggle-thumb-size: 17px;
+}
+
+.toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-track {
+  position: relative;
+  flex: none;
+  width: var(--toggle-track-width);
+  height: var(--toggle-track-height);
+  border-radius: calc(var(--toggle-track-height) / 2);
+  background: var(--fn-control-off);
+  transition: background 150ms ease;
+}
+
+.toggle-switch input:checked + .toggle-track {
+  background: var(--fn-accent);
+}
+
+.toggle-switch input:disabled + .toggle-track {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: var(--toggle-inset);
+  left: var(--toggle-inset);
+  width: var(--toggle-thumb-size);
+  height: var(--toggle-thumb-size);
+  border-radius: 50%;
+  background: var(--fn-control-thumb);
+  box-shadow: 0 1px 3px rgb(var(--fn-shadow) / 20%);
+  transition: transform 150ms ease;
+}
+
+.toggle-switch input:checked + .toggle-track .toggle-thumb {
+  transform: translateX(
+    calc(var(--toggle-track-width) - var(--toggle-thumb-size) - (2 * var(--toggle-inset)))
+  );
+}
+
+.toggle-label {
+  color: var(--fn-text-secondary);
+}
+
+.toggle-switch input:focus-visible + .toggle-track {
+  outline: 3px solid var(--fn-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Windows High Contrast Mode (Task 023 Addendum B4). On and off were carried
+   by track colour alone, and both become the same system colour; the thumb was
+   a light disc on a track that also becomes a system colour, so the position
+   cue could vanish too. Travels with the control rather than being restated in
+   each surface's stylesheet - which is how the Popup came to have no
+   forced-colors support at all until Task 035 found it. */
+@media (forced-colors: active) {
+  .toggle-track { border: 1px solid CanvasText; background: Canvas; }
+  .toggle-switch input:checked + .toggle-track { background: Highlight; }
+  .toggle-thumb { background: CanvasText; box-shadow: none; }
+  .toggle-switch input:checked + .toggle-track .toggle-thumb { background: HighlightText; }
+  .toggle-switch input:disabled + .toggle-track { border-color: GrayText; opacity: 1; }
+  .toggle-switch input:disabled + .toggle-track .toggle-thumb { background: GrayText; }
+  .toggle-switch input:focus-visible + .toggle-track { outline: 3px solid Highlight; outline-offset: 2px; }
+}

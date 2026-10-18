@@ -1,0 +1,90 @@
+<!doctype html>
+<html><head><style>
+button, input, textarea { background: rgb(255, 0, 0) !important; color: rgb(0, 128, 0) !important; font-size: 30px !important; }
+fillnest-selection-preview { display: none !important; width: 1px !important; height: 1px !important; }
+div, span { background: none !important; color: rgb(255, 0, 255) !important; }
+body { min-height: 1400px; margin: 40px; }
+.fixture-row { margin: 18px 0; }
+input, textarea { width: 360px; }
+</style></head><body>
+<form id="fixture-form"><div id="host-sentinel" class="fixture-row sentinel">
+<textarea id="textarea-field">Textarea</textarea>
+<input id="text-field" type="text" value="Hello world">
+<input id="missing-type" value="Missing">
+<input id="invalid-type" type="invalid-kind" value="Invalid fallback">
+<input id="search-field" type="search" value="Search">
+<input id="email-field" type="email" value="person@example.test">
+<input id="tel-field" type="tel" value="0400000000">
+<input id="url-field" type="url" value="https://example.test">
+<label>Date notes<input id="date-notes-field" type="text" name="date_notes" value="Call later"></label>
+<label>Start<input id="start-date" type="text" name="start-date" value="Free text"></label>
+<input id="short-field" type="text" style="height:22px !important" value="Short field">
+<input id="ordinary-field" type="text" style="height:26px !important" value="Ordinary field">
+<textarea id="tall-field" style="height:78px !important">Tall field</textarea>
+<input id="create-field" type="text" value="Create me literally">
+<input id="bind-field" type="text" value="Do not change">
+<input id="replace-field" type="text" value="before SELECT after">
+<input id="sibling-field" type="text" value="Sibling untouched">
+</div>
+<input id="password-field" type="password" value="secret">
+<input id="number-field" type="number" value="42">
+<input id="date-field" type="date" value="2026-08-08">
+<label>Date picker<input id="script-date-picker" type="text" name="my-date" value="2026-08-08"></label>
+<label>Appointment<input id="controlled-date-field" type="text" role="combobox" aria-haspopup="dialog" aria-controls="appointment-calendar" aria-label="Choose date" placeholder="YYYY-MM-DD" value="2026-08-08"></label>
+<div id="appointment-calendar" role="dialog" hidden>Calendar</div>
+<label>Country<input id="controlled-country-field" type="text" role="combobox" aria-haspopup="listbox" aria-controls="country-options" value="Australia"></label>
+<div id="country-options" role="listbox" hidden>Australia</div>
+<label>Country implicit<input id="implicit-country-field" type="text" role="combobox" aria-controls="implicit-country-options" value="Australia"></label>
+<div id="implicit-country-options" role="listbox" hidden>Australia</div>
+<label>Quantity<input id="spinbutton-field" type="text" role="spinbutton" value="2"></label>
+<input id="hidden-field" type="hidden" value="hidden">
+<input id="payment-field" type="text" autocomplete="cc-number" value="4111111111111111">
+<input id="otp-field" type="text" autocomplete="one-time-code" value="123456">
+<input id="section-otp-field" type="text" autocomplete="section-login one-time-code" value="654321">
+<label>Credit card number<input id="label-card-field" type="text" name="entry" value="4111111111111111"></label>
+<input id="readonly-field" type="text" readonly value="readonly">
+<input id="disabled-field" type="text" disabled value="disabled">
+<div id="editable-div" contenteditable="true">Editable</div>
+<button type="submit">Host submit</button></form>
+<hr>
+<main>
+<h1 id="record-heading">Fictional record</h1>
+<button id="spa-next" type="button">Navigate SPA</button>
+<button id="reveal-conditional" type="button">Reveal conditional field</button>
+<button id="reconstruct" type="button">Reconstruct form</button>
+<form name="customer-editor"><section id="dynamic-email">
+<label>Email for Fictional record<input name="contact_email" type="email" data-input-count="0" data-change-count="0" oninput="this.dataset.inputCount=String(Number(this.dataset.inputCount)+1)" onchange="this.dataset.changeCount=String(Number(this.dataset.changeCount)+1)"></label>
+</section></form>
+</main>
+<script>
+window.eventLogs = {}; window.submitCount = 0; window.pwned = false;
+const ids = ['textarea-field','text-field','missing-type','invalid-type','search-field','email-field','tel-field','url-field','date-notes-field','start-date','short-field','ordinary-field','tall-field','create-field','bind-field','replace-field','sibling-field','password-field','number-field','date-field','script-date-picker','controlled-date-field','controlled-country-field','implicit-country-field','spinbutton-field','hidden-field','payment-field','otp-field','section-otp-field','label-card-field','readonly-field','disabled-field'];
+for (const id of ids) {
+  const field = document.getElementById(id);
+  window.eventLogs[id] = [];
+  for (const type of ['beforeinput','input','change']) field.addEventListener(type, event => window.eventLogs[id].push({ type: event.type, constructor: event.constructor.name, inputType: event.inputType ?? null, data: event.data ?? null, bubbles: event.bubbles, composed: event.composed, cancelable: event.cancelable }));
+}
+document.getElementById('fixture-form').addEventListener('submit', event => { window.submitCount++; event.preventDefault(); });
+
+window.dynamicEvents = { input: 0, change: 0 };
+const editor = document.getElementById('dynamic-email');
+document.getElementById('spa-next').addEventListener('click', () => {
+  const nextId = crypto.randomUUID();
+  history.pushState({}, '', '/customers/' + nextId + '/edit?record=' + nextId + '&name=SPA');
+  document.getElementById('record-heading').textContent = 'SPA record';
+  editor.innerHTML = '<label>Email for SPA record<input name="contact_email" type="email" data-input-count="0" data-change-count="0" oninput="this.dataset.inputCount=String(Number(this.dataset.inputCount)+1)" onchange="this.dataset.changeCount=String(Number(this.dataset.changeCount)+1)"></label>';
+});
+document.getElementById('reveal-conditional').addEventListener('click', () => {
+  if (editor.querySelector('input[name="conditional_note"]')) return;
+  const label = document.createElement('label');
+  label.textContent = 'Conditional note';
+  const input = document.createElement('input');
+  input.name = 'conditional_note';
+  input.type = 'text';
+  label.append(input);
+  editor.append(label);
+});
+document.getElementById('reconstruct').addEventListener('click', () => {
+  editor.innerHTML = '<label>Email for reconstructed record<input name="contact_email" type="email" data-input-count="0" data-change-count="0"></label>';
+});
+</script></body></html>

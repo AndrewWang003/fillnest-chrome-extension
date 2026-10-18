@@ -1,0 +1,71 @@
+import { afterEach, expect, it, vi } from 'vitest';
+import { createInitialActivationState } from '../../../src/activation/activation-repository';
+import { createInitialFillNestState } from '../../../src/storage/fillnest-repository';
+
+// Audit evidence: assertions describe the observed defects, not desired behavior.
+// Run: npx vitest run --config tasks/evidence/phase-one-audit-2026-09-11/runtime-probe.config.mjs
+async function worker() {
+  vi.resetModules();
+  const data: Record<string, any> = {
+    fillnestState: createInitialFillNestState(),
+    fillnestActivation: createInitialActivationState(),
+  };
+  let fault: ((items: Record<string, unknown>) => void) | undefined;
+  let listener: any;
+  const notifications: any[] = [];
+  vi.stubGlobal('chrome', {
+    storage: { local: {
+      get: async (key: string) => structuredClone({ [key]: data[key] }),
+      set: async (items: Record<string, unknown>) => { fault?.(items); Object.assign(data, structuredClone(items)); },
+      remove: async (key: string) => { delete data[key]; },
+    } },
+    runtime: {
+      id: 'audit', getURL: (path: string) => `chrome-extension://audit/${path}`,
+      getManifest: () => ({ version: '0.1.1' }),
+      onInstalled: { addListener: vi.fn() },
+      onMessage: { addListener: (next: any) => { listener = next; } },
+      sendMessage: async (message: any) => { notifications.push(message); },
+    },
+    permissions: {
+      getAll: async () => ({ origins: [] }),
+      onRemoved: { addListener: vi.fn() },
+    },
+    scripting: { getRegisteredContentScripts: async () => [] },
+    tabs: { query: async () => [], sendMessage: async () => undefined },
+  });
+  await import('../../../src/background/service-worker');
+  const send = (message: any): Promise<any> => new Promise((resolve) => {
+    listener(message, { id: 'audit', url: 'chrome-extension://audit/side-panel.html' }, resolve);
+  });
+  expect((await send({ type: 'READ_STATE' })).ok).toBe(true);
+  return { data, send, notifications, setFault: (next: typeof fault) => { fault = next; } };
+}
+
+afterEach(() => vi.unstubAllGlobals());
+
+it('allows new writes and overwrites recovery evidence after a failed Restore rollback in the same worker', async () => {
+  const w = await worker();
+  const backup = await w.send({ type: 'CREATE_BACKUP_ARCHIVE' });
+  const archiveJson = backup.value.archiveJson;
+  await w.send({ type: 'CREATE_TEMPLATE', content: 'Original user data', pageUrl: 'https://example.com/' });
+  const preview = await w.send({ type: 'VALIDATE_BACKUP_ARCHIVE', archiveJson });
+  let activationWrites = 0;
+  let businessWrites = 0;
+  w.setFault((items) => {
+    if ((items._fillnest_restore_journal as any)?.status === 'failed') throw new Error('Injected journal update failure');
+    if ('fillnestState' in items && ++businessWrites === 2) throw new Error('Injected rollback failure');
+    if ('fillnestActivation' in items && ++activationWrites === 1) throw new Error('Injected activation failure');
+  });
+  expect((await w.send({ type: 'RESTORE_BACKUP_ARCHIVE', archiveJson, typedConfirmation: 'restore', expectedConfirmationToken: preview.value.confirmationToken })).ok).toBe(false);
+  expect(w.data._fillnest_restore_journal.status).toBe('in_progress');
+  expect(w.data._fillnest_restore_journal.priorState.business.templates[0].content).toBe('Original user data');
+  expect(w.data.fillnestState.templates).toHaveLength(0);
+  w.setFault(undefined);
+  // This should be blocked while failed recovery evidence exists.
+  expect((await w.send({ type: 'CREATE_TEMPLATE', content: 'After failure', pageUrl: 'https://example.com/' })).ok).toBe(true);
+  const retryPreview = await w.send({ type: 'VALIDATE_BACKUP_ARCHIVE', archiveJson });
+  expect((await w.send({ type: 'RESTORE_BACKUP_ARCHIVE', archiveJson, typedConfirmation: 'restore', expectedConfirmationToken: retryPreview.value.confirmationToken })).ok).toBe(true);
+  // A second Restore discarded the original prior state, despite its failed journal.
+  expect(w.data._fillnest_restore_journal).toBeUndefined();
+  expect(w.data.fillnestState.templates).toHaveLength(0);
+});

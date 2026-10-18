@@ -1,0 +1,23 @@
+/* Task 045 (owner QA, 2026-09-15). A scrollbar that appears only once content
+   overflows takes its width from that content, and everything re-lays out:
+   the UI jumps. So every scroll container keeps its scrollbar's room at all
+   times (`scrollbar-gutter: stable`, set on each container), and the
+   scrollbar is drawn the same 10px wide on every system. Left to the system
+   it is 0px (a macOS overlay), 15px or 17px, and no container's right
+   padding could be right for all three; with 10px, each container's right
+   padding is its left padding less 10px, so content sits evenly between
+   the edges whether it scrolls or not.
+
+   Shared by the Popup and the Side Panel, and read into the Picker's Shadow
+   Root, where it reaches only the Picker's own elements. The Popup needs no
+   gutter: Chrome widens a Popup window by its scrollbar rather than narrowing
+   its content. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 10px; background: var(--fn-border-strong) padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--fn-text-muted); }
+/* A text box scrolls on its own; its text keeps the same width as it grows. */
+textarea { scrollbar-gutter: stable; }
+@media (forced-colors: active) {
+  ::-webkit-scrollbar-thumb { forced-color-adjust: none; background-color: CanvasText; }
+}

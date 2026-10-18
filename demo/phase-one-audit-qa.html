@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FillNest - Phase One Audit QA Fixture</title>
+  <style>
+    body { max-width: 760px; margin: 32px auto; padding: 0 16px; font: 15px/1.5 system-ui, sans-serif; color: #1f2933; }
+    section { margin: 28px 0; padding: 16px 18px; border: 1px solid #d5dbe1; border-radius: 10px; }
+    h1 { font-size: 22px; } h2 { margin-top: 0; font-size: 17px; }
+    .box { min-height: 72px; margin: 8px 0; padding: 8px 10px; border: 1px solid #9aa5b1; border-radius: 6px; background: #fff; }
+    .box[contenteditable="false"] { background: #eef1f4; color: #7b8794; }
+    textarea { width: 100%; min-height: 64px; }
+    code { padding: 1px 4px; border-radius: 4px; background: #eef1f4; }
+    .status { color: #52606d; font-size: 13px; }
+    nav a { margin-right: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Phase One Audit - QA Fixture</h1>
+  <p>
+    Hands-on checks for Task 039 and its Addendum A. Serve this folder over HTTP
+    (<code>python3 -m http.server 8973</code> in <code>demo/</code>), open
+    <code>http://localhost:8973/phase-one-audit-qa.html</code>, and allow
+    FillNest on this address. Site-neutral markup only; nothing here is a
+    target-site selector.
+  </p>
+
+  <section>
+    <h2>C1 - A label that wraps a rich text box</h2>
+    <p>
+      The label's own words are "Support reply". The draft inside the box must
+      never become the field's name or identity.
+    </p>
+    <label>Support reply
+      <div id="c1-box" class="box" role="textbox" aria-multiline="true" contenteditable="true">This draft must not become the field name.</div>
+    </label>
+  </section>
+
+  <section>
+    <h2>C1, Addendum A - A label that wraps an ordinary text box</h2>
+    <p>
+      The labels' own words are "Case notes" and "Live reply". The first box
+      arrives filled in, as an edit form would; the second copies what you type
+      into its own text, as a controlled React text box does. Neither box's
+      text may become the field's name.
+    </p>
+    <label>Case notes
+      <textarea name="case-notes">This existing note must not become the field name.</textarea>
+    </label>
+    <label>Live reply
+      <textarea id="a-mirror" name="live-reply"></textarea>
+    </label>
+  </section>
+
+  <section>
+    <h2>C2 - A hash route with query state</h2>
+    <nav>
+      <a href="#/orders?tab=open">Open orders</a>
+      <a href="#/orders?tab=closed">Closed orders</a>
+      <a href="#/orders?tab=open&amp;utm_source=newsletter">Open orders (from a newsletter link)</a>
+    </nav>
+    <p class="status">Current route: <code id="c2-route"></code></p>
+    <textarea id="c2-note" name="order-note" aria-label="Order note"></textarea>
+  </section>
+
+  <section>
+    <h2>C3 - A box that stops being editable</h2>
+    <p>
+      Focus the box so FillNest's control appears, then lock it. Use the
+      delayed lock so focus can stay in the box while it happens.
+    </p>
+    <div id="c3-box" class="box" role="textbox" aria-multiline="true" aria-label="Lockable note" contenteditable="true"></div>
+    <button type="button" id="c3-lock-later">Lock this box in 3 seconds</button>
+    <button type="button" id="c3-unlock">Unlock</button>
+    <p class="status" id="c3-status">Editable.</p>
+  </section>
+
+  <script>
+    // What a controlled React textarea does on every keystroke: its value is
+    // mirrored into defaultValue, which is the element's own text.
+    const mirror = document.getElementById("a-mirror");
+    mirror.addEventListener("input", () => { mirror.defaultValue = mirror.value; });
+
+    const route = document.getElementById("c2-route");
+    const showRoute = () => { route.textContent = location.hash || "(none)"; };
+    addEventListener("hashchange", showRoute);
+    showRoute();
+
+    const box = document.getElementById("c3-box");
+    const status = document.getElementById("c3-status");
+    document.getElementById("c3-lock-later").addEventListener("click", () => {
+      status.textContent = "Locking in 3 seconds - click into the box now.";
+      setTimeout(() => {
+        box.contentEditable = "false";
+        status.textContent = "Locked (contenteditable=false).";
+      }, 3000);
+    });
+    document.getElementById("c3-unlock").addEventListener("click", () => {
+      box.contentEditable = "true";
+      status.textContent = "Editable.";
+    });
+  </script>
+</body>
+</html>
