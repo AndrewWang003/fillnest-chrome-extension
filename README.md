@@ -9,7 +9,7 @@
 - **Problem:** people retype the same replies, notes and details into web forms every day. Tools that guess and fill whole pages can put the wrong text in the wrong place.
 - **Approach:** FillNest is deliberately conservative. It never fills a page or submits a form. It only recognises a field when the evidence is strong, and treats anything uncertain as new ("identity over similarity", fail closed).
 - **Privacy:** local-first. No account, no server, no tracking. It asks for website access one site at a time.
-- **Status:** version 0.2.0, a Chrome Web Store beta candidate (not yet submitted). English and Simplified Chinese.
+- **Status:** version 0.2.0 beta, published on the Chrome Web Store. English and Simplified Chinese. Privacy policy: [PRIVACY.md](PRIVACY.md).
 - **Stack:** Manifest V3, TypeScript, Preact, Vite; Vitest and Playwright: 1,110 unit tests plus about 50 end-to-end test files.
 
 ![Templates page in the Chrome side panel](docs/images/03-templates.png)
@@ -49,7 +49,7 @@ V1 is a usable validation MVP focused on a conservative local workflow:
 
 ## Since V1
 
-Version `0.2.0` is the Chrome Web Store Beta candidate. Beyond V1's scope
+Version `0.2.0` is the Chrome Web Store beta. Beyond V1's scope
 above, it adds:
 
 - **Rich text fields** - chat composers and other `contenteditable` editors,
@@ -118,8 +118,8 @@ both arrived in `0.2.0` (Tasks 036 and 033).
 ## Delivery Status
 
 The V1 validation MVP (Tasks 001-009) is complete and accepted. The current
-version is `0.2.0`, the Chrome Web Store Beta candidate, delivered as
-independently gated Tasks; it has not been submitted yet.
+version is `0.2.0`, the Chrome Web Store beta, delivered as
+independently gated Tasks.
 
 `DEVELOPMENT.md` is the authority for current status. `tasks/README.md` links every contract and summarizes their boundaries and dependencies.
 
