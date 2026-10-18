@@ -2,6 +2,8 @@
 
 **Your templates, right where you type.** A Chrome extension that offers your saved texts beside the web field you are typing in, and inserts one only when you choose it.
 
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/fillnest/aefjighkledcgodcmepkbfgaollgpolp)**
+
 ![FillNest picker next to a form field](docs/images/01-picker.png)
 
 ## At a glance
@@ -9,7 +11,7 @@
 - **Problem:** people retype the same replies, notes and details into web forms every day. Tools that guess and fill whole pages can put the wrong text in the wrong place.
 - **Approach:** FillNest is deliberately conservative. It never fills a page or submits a form. It only recognises a field when the evidence is strong, and treats anything uncertain as new ("identity over similarity", fail closed).
 - **Privacy:** local-first. No account, no server, no tracking. It asks for website access one site at a time.
-- **Status:** version 0.2.0 beta, published on the Chrome Web Store. English and Simplified Chinese. Privacy policy: [PRIVACY.md](PRIVACY.md).
+- **Status:** version 0.2.0 beta, [published on the Chrome Web Store](https://chromewebstore.google.com/detail/fillnest/aefjighkledcgodcmepkbfgaollgpolp). English and Simplified Chinese. Privacy policy: [PRIVACY.md](PRIVACY.md).
 - **Stack:** Manifest V3, TypeScript, Preact, Vite; Vitest and Playwright: 1,110 unit tests plus about 50 end-to-end test files.
 
 ![Templates page in the Chrome side panel](docs/images/03-templates.png)
